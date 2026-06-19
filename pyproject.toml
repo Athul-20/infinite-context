@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infinite_context"
+version = "0.1.0"
+authors = [
+  { name="Dev Team", email="dev@example.com" },
+]
+description = "A hybrid AI context gateway combining Headroom cloud compression and In-Place Local Test-Time Training (TTT)."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "httpx",
+]
+
+[project.optional-dependencies]
+cloud = [
+    "headroom-ai",
+]
+local = [
+    "torch",
+    "transformers",
+    "peft",
+    "accelerate",
+    "bitsandbytes",
+]
+all = [
+    "headroom-ai",
+    "torch",
+    "transformers",
+    "peft",
+    "accelerate",
+    "bitsandbytes",
+]
+
+[tool.setuptools.packages.find]
+include = ["infinite_context*"]
