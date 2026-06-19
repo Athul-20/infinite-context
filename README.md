@@ -4,7 +4,7 @@
 
 Whether you are building RAG pipelines, autonomous agents, or large-scale document analysis tools, this library allows you to bypass standard memory limitations by routing your data through two highly optimized, infinite-context engines:
 
-1. **Cloud Engine (Groq Optimized)**: Uses a highly-optimized local compression algorithm to compress massive documents locally for *free* (shrinking token counts by up to 90%), before routing the smaller payload directly to **Groq's** lightning-fast Llama 3 models. **Use case**: Cost-effective, extremely high-speed document analysis using Groq's LPU inference.
+1. **Cloud Engine (Universal API Support)**: Uses a highly-optimized local compression algorithm to compress massive documents locally for *free* (shrinking token counts by up to 90%). It then routes the smaller payload to **ANY** OpenAI-compatible cloud provider (Groq, OpenAI, Anthropic, Together AI, etc.). **Use case**: Cost-effective, high-speed document analysis using state-of-the-art proprietary models.
 2. **Local Engine**: Bypasses the KV-Cache entirely using **In-Place Test-Time Training (TTT)**. It injects a PEFT DoRA adapter to bake massive documents directly into the neural weights of local open-source models (like Qwen) running on your own GPU. **Use case**: 100% offline, privacy-preserving document reasoning with zero API costs.
 
 ---
@@ -27,11 +27,11 @@ pip install "infinite-context-gateway[local]"
 
 ## Usage
 
-### Option 1: Cloud Engine (Local Compression + Groq API)
+### Option 1: Cloud Engine (Local Compression + Universal Cloud API)
 
 When you use the Cloud Engine, the gateway instantly compresses your massive documents **locally on your computer for free**. 
 
-It then sends the shrunken document securely to the Groq API to answer your question at lightning speed. Because the document was compressed locally first, you save massive amounts of money on Groq API token costs!
+It then sends the shrunken document securely to **ANY** cloud LLM provider (OpenAI, Anthropic, Groq, Together AI) to answer your question at lightning speed. Because the document was compressed locally first, you save massive amounts of money on API token costs!
 
 ```python
 from infinite_context import ContextGateway
