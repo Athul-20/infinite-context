@@ -1,9 +1,11 @@
 # Infinite Context Gateway
 
-A hybrid Python library designed to handle massive amounts of text context by routing queries through two highly optimized, infinite-context engines:
+**Infinite Context Gateway** is a production-ready Python library designed to solve the "context window limit" and high API token costs associated with analyzing massive documents. 
 
-1. **Cloud Engine**: Compresses massive documents locally for *free* using the open-source `headroom-ai` algorithm, and sends the smaller payload to commercial cloud LLMs (OpenAI, Anthropic, Groq).
-2. **Local Engine**: Uses **In-Place Test-Time Training (TTT)** via DoRA to bake massive documents directly into the neural weights of local open-source models on your own GPU.
+Whether you are building RAG pipelines, autonomous agents, or large-scale document analysis tools, this library allows you to bypass standard memory limitations by routing your data through two highly optimized, infinite-context engines:
+
+1. **Cloud Engine**: Uses the open-source `headroom-ai` algorithm to compress massive documents locally for *free* (shrinking token counts by up to 90%), before routing the smaller payload to commercial cloud LLMs (OpenAI, Anthropic, Groq). **Use case**: Cost-effective, high-speed document analysis using state-of-the-art proprietary models.
+2. **Local Engine**: Bypasses the KV-Cache entirely using **In-Place Test-Time Training (TTT)**. It injects a PEFT DoRA adapter to bake massive documents directly into the neural weights of local open-source models (like Qwen) running on your own GPU. **Use case**: 100% offline, privacy-preserving document reasoning with zero API costs.
 
 ---
 
