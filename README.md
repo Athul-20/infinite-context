@@ -4,7 +4,7 @@
 
 Whether you are building RAG pipelines, autonomous agents, or large-scale document analysis tools, this library allows you to bypass standard memory limitations by routing your data through two highly optimized, infinite-context engines:
 
-1. **Cloud Engine**: Uses the open-source `headroom-ai` algorithm to compress massive documents locally for *free* (shrinking token counts by up to 90%), before routing the smaller payload to commercial cloud LLMs (OpenAI, Anthropic, Groq). **Use case**: Cost-effective, high-speed document analysis using state-of-the-art proprietary models.
+1. **Cloud Engine (Groq Optimized)**: Uses a highly-optimized local compression algorithm to compress massive documents locally for *free* (shrinking token counts by up to 90%), before routing the smaller payload directly to **Groq's** lightning-fast Llama 3 models. **Use case**: Cost-effective, extremely high-speed document analysis using Groq's LPU inference.
 2. **Local Engine**: Bypasses the KV-Cache entirely using **In-Place Test-Time Training (TTT)**. It injects a PEFT DoRA adapter to bake massive documents directly into the neural weights of local open-source models (like Qwen) running on your own GPU. **Use case**: 100% offline, privacy-preserving document reasoning with zero API costs.
 
 ---
@@ -27,13 +27,11 @@ pip install "infinite-context-gateway[local]"
 
 ## Usage
 
-### Option 1: Cloud Engine (Local Compression + Cloud LLM)
+### Option 1: Cloud Engine (Local Compression + Groq API)
 
-When you use the Cloud Engine, the gateway uses the open-source `headroom-ai` library to instantly compress your massive documents **locally on your computer for free**. 
+When you use the Cloud Engine, the gateway instantly compresses your massive documents **locally on your computer for free**. 
 
-It then sends the shrunken document to a cloud provider like OpenAI, Groq, or Anthropic to answer the question. Because the document was compressed locally, you save massive amounts of money on API token costs!
-
-**Note:** The `api_key` you provide here is for the *Cloud Provider* (like OpenAI or Groq), NOT for Headroom!
+It then sends the shrunken document securely to the Groq API to answer your question at lightning speed. Because the document was compressed locally first, you save massive amounts of money on Groq API token costs!
 
 ```python
 from infinite_context import ContextGateway
@@ -42,7 +40,7 @@ from infinite_context import ContextGateway
 gateway = ContextGateway(
     engine="cloud",
     model_id="llama3-70b-8192",          # Target model on Groq
-    api_key="your_groq_api_key_here",    # The API key for the Cloud LLM provider
+    api_key="your_groq_api_key_here",    # Your Groq API Key
     base_url="https://api.groq.com/openai/v1/chat/completions",
     compression_ratio=0.8                # Compress the document by 80% locally
 )
