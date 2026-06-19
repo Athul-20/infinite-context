@@ -1,81 +1,94 @@
-# Infinite Context
+# Infinite Context Gateway
 
-A hybrid AI context gateway combining **Headroom cloud compression** and **In-Place Local Test-Time Training (TTT)**.
+A hybrid Python library designed to handle massive amounts of text context by routing queries through two highly optimized, infinite-context engines:
+
+1. **Cloud Engine**: Compresses massive documents locally for *free* using the open-source `headroom-ai` algorithm, and sends the smaller payload to commercial cloud LLMs (OpenAI, Anthropic, Groq).
+2. **Local Engine**: Uses **In-Place Test-Time Training (TTT)** via DoRA to bake massive documents directly into the neural weights of local open-source models on your own GPU.
+
+---
 
 ## Installation
 
-To install the base gateway:
+You can install the package directly from PyPI or GitHub. Choose the extras based on which engine you want to use.
+
+**For Cloud Engine (Lightweight, CPU only):**
 ```bash
-pip install infinite_context
+pip install "infinite-context-gateway[cloud]"
 ```
 
-To install with Cloud Phase 1 dependencies (Headroom API):
+**For Local Engine (Requires NVIDIA GPU & CUDA):**
 ```bash
-pip install infinite_context[cloud]
+pip install "infinite-context-gateway[local]"
 ```
 
-To install with Local Phase 2 dependencies (PyTorch, Transformers, PEFT):
-```bash
-pip install infinite_context[local]
-```
+---
 
 ## Usage
 
-### Phase 1: Cloud Compression
-Uses the Headroom API to semantically compress a massive context and send it to cloud providers (OpenAI, Anthropic) while keeping costs low.
+### Option 1: Cloud Engine (Local Compression + Cloud LLM)
+
+When you use the Cloud Engine, the gateway uses the open-source `headroom-ai` library to instantly compress your massive documents **locally on your computer for free**. 
+
+It then sends the shrunken document to a cloud provider like OpenAI, Groq, or Anthropic to answer the question. Because the document was compressed locally, you save massive amounts of money on API token costs!
+
+**Note:** The `api_key` you provide here is for the *Cloud Provider* (like OpenAI or Groq), NOT for Headroom!
 
 ```python
 from infinite_context import ContextGateway
 
+# Example: Using Groq's super-fast Llama 3 API
 gateway = ContextGateway(
     engine="cloud",
-    model_id="claude-3-5-sonnet-20240620",
-    api_key="your_anthropic_api_key",
-    compression_ratio=0.8
+    model_id="llama3-70b-8192",          # Target model on Groq
+    api_key="your_groq_api_key_here",    # The API key for the Cloud LLM provider
+    base_url="https://api.groq.com/openai/v1/chat/completions",
+    compression_ratio=0.8                # Compress the document by 80% locally
 )
 
-# You can pass in conversational history (rolling window)
-history = [
-    {"role": "user", "content": "What is the codebase about?"},
-    {"role": "assistant", "content": "It is a Python application..."}
-]
-
-response = gateway.chat("How does the failover protocol work?", massive_context, history=history)
+# Pass in a massive document and ask a question!
+massive_document = "..."
+response = gateway.chat("What is the failover protocol?", massive_document)
 print(response)
 ```
 
-### Phase 2: Local Test-Time Training (TTT)
-Bypasses the KV-Cache entirely by injecting a PEFT LoRA adapter and baking the context directly into the model's neural weights on your local GPU. Includes Early Stopping latency optimizations and Generation repetition penalties.
+---
+
+### Option 2: Local Engine (Test-Time Training)
+
+When you use the Local Engine, the gateway bypasses the standard KV-Cache memory limits entirely. 
+
+Instead of putting the document into the prompt, it injects a fast PEFT DoRA adapter into a local model (like Qwen 0.5B) and **trains the document directly into the neural weights** over a few seconds. 
+
+This requires absolutely zero internet connection and no API keys.
 
 ```python
 from infinite_context import ContextGateway
 
+# Loads the model in 4-bit precision into your GPU
 gateway = ContextGateway(
     engine="local",
     model_id="Qwen/Qwen2.5-0.5B-Instruct",
     load_in_4bit=True
 )
 
-response = gateway.chat("What is the failover protocol?", massive_context)
+response = gateway.chat("What is the failover protocol?", massive_document)
 print(response)
 ```
 
-### Checkpoint Persistence
-Save trained Fast Weights to disk and resume later without re-reading the document:
+#### Checkpoint Persistence
+Because the local engine alters the neural weights, you can save the trained "Fast Weights" to your hard drive. You can then reload them days later and ask questions about the massive document *without ever reading the document again*.
 
 ```python
-from infinite_context import ContextGateway
+# 1. Train the model on the document
+gateway.chat("Summarise.", massive_document, keep_state=True)
 
-# Train and keep state
-gateway = ContextGateway(engine="local", model_id="Qwen/Qwen2.5-0.5B-Instruct")
-gateway.chat("Summarise the document.", massive_context, keep_state=True)
-gateway.save_state("./my_checkpoint")
+# 2. Save the brain state
+gateway.save_state("./memory_checkpoint")
 
-del gateway  # Free all GPU memory
+# 3. Reload it later (zero retraining time)
+new_gateway = ContextGateway(engine="local", model_id="Qwen/Qwen2.5-0.5B-Instruct")
+new_gateway.load_state("./memory_checkpoint")
 
-# Resume later — zero re-training
-gateway = ContextGateway(engine="local", model_id="Qwen/Qwen2.5-0.5B-Instruct")
-gateway.load_state("./my_checkpoint")
-response = gateway.chat("What was the protocol?", context="")
-print(response)
+# Ask a question without passing the context!
+answer = new_gateway.chat("What was the protocol?", context="")
 ```
